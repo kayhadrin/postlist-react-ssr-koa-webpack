@@ -36,10 +36,13 @@ The app does server side streaming using:
 ## Load testing the App
 ### Using `curl` command (preferred)
 1. Open 3 terminals and run the following:
-   - ```./test/loadtest-fbt.sh en_US 100```
-   - ```./test/loadtest-fbt.sh fr_FR 100```
-   - ```./test/loadtest-fbt.sh ja_JP 100```
-   
+   ```
+   ./test/loadtest-fbt.sh en_US 100 &
+   ./test/loadtest-fbt.sh fr_FR 100 &
+   ./test/loadtest-fbt.sh ja_JP 100 &
+   wait
+   ```
+
    If you get file permissions error please run ```chmod +x loadtest-fbt.sh```
 
 ### Using ```loadtest``` package
