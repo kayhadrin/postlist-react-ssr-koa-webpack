@@ -20,50 +20,77 @@ import { loadTranslations } from './helpers/translations';
 import sleep from './helpers/sleep';
 import requestCountMiddleware from './middleware/requestCount';
 
-var server = new Koa();
-var bodyParser = new KoaBodyParser();
-const router = new KoaRouter();
+// import { createNamespace } from 'continuation-local-storage';
+import { createNamespace } from 'cls-hooked';
+const session = createNamespace('session');
 
-server.use(KoaStatic('dist'));
-server.use(bodyParser);
-server.use(requestCountMiddleware);
-server.use(router.routes());
+// session.run(() => {
+  var server = new Koa();
+  var bodyParser = new KoaBodyParser();
+  const router = new KoaRouter();
 
-router.get('/', async (ctx) => {
-  // Simulate the slowness of getting initial app data via an API call
-  await sleep(1000);
+  server.use(KoaStatic('dist'));
+  server.use(bodyParser);
+  server.use(requestCountMiddleware);
+  server.use(router.routes());
 
-  let locale = 'en_US';
-  if (ctx.query && ctx.query.locale) {
-    locale = ctx.query.locale;
-  }
-  await loadTranslations(locale);
 
-  // Traditional Server Side Rendering
-  // const body = renderToString(<App />);
-  // ctx.body = html({ body, locale });
+  // var db = require('./lib/db.js');
 
-  // Simulate the time it will take for a production app to actually create the stream
-  const getSlowStream = async () => {
-    await sleep(500);
-    return stringStream('<body><div id="root">');
-  }
+  // function start(options, next) {
+  //   db.fetchUserById(options.id, function (error, user) {
+  //     if (error) return next(error);
 
-  const slowStream = await getSlowStream();
-  // Stream the HTML response
-  const stream = new MultiStream([
-    () => stringStream(`<!DOCTYPE html><html lang=${ locale }>`),
-    () => renderToStaticNodeStream(getHeadSection()),
-    () => slowStream,
-    () => renderToNodeStream(<App />),
-    () => stringStream('</div></body><script src="js/client.js"></script></html>'),
-  ]);
+  //     session.set('user', user);
 
-  ctx.response.type = 'text/html; charset=utf-8';
-  ctx.status = 200;
-  ctx.body = stream;
-});
+  //     next();
+  //   });
+  // }
 
-server.listen(8088, () => {
-  console.log('Server Listening on port 8088 🎉');
-});
+  router.get('/', async (ctx) => {
+    await session.runAndReturn(async (outer) => {
+      // Simulate the slowness of getting initial app data via an API call
+      await sleep(1000);
+
+      let locale = 'en_US';
+      if (ctx.query && ctx.query.locale) {
+        locale = ctx.query.locale;
+      }
+      // ctx.state.locale = locale;
+      console.log('DEBUG ctx:locale=', locale);
+      session.set('locale', locale);
+      console.log('DEBUG 1 session:locale=', session.get('locale'));
+      await loadTranslations(locale, true);
+      console.log('DEBUG 2 session:locale=', session.get('locale'));
+
+      // Traditional Server Side Rendering
+      // const body = renderToString(<App />);
+      // ctx.body = html({ body, locale });
+
+      // Simulate the time it will take for a production app to actually create the stream
+      const getSlowStream = async () => {
+        await sleep(500);
+        return stringStream('<body><div id="root">');
+      }
+
+      const slowStream = await getSlowStream();
+      // Stream the HTML response
+      const stream = new MultiStream([
+        () => stringStream(`<!DOCTYPE html><html lang=${locale}>`),
+        () => renderToStaticNodeStream(getHeadSection()),
+        () => slowStream,
+        () => renderToNodeStream(<App />),
+        () => stringStream('</div></body><script src="js/client.js"></script></html>'),
+      ]);
+
+      ctx.response.type = 'text/html; charset=utf-8';
+      ctx.status = 200;
+      ctx.body = stream;
+    });
+  });
+
+  server.listen(8088, () => {
+    console.log('Server Listening on port 8088 🎉');
+  });
+
+// });

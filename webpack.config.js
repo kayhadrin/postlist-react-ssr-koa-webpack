@@ -3,7 +3,7 @@ const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = function(env, argv) {
-  
+
   // default to the server configuration
   const base = {
     mode: 'development',
@@ -50,7 +50,7 @@ module.exports = function(env, argv) {
     },
     watch: true,
   };
-  
+
   // server-specific configuration
   if (env.platform === 'server') {
     base.target = 'node';
@@ -60,6 +60,12 @@ module.exports = function(env, argv) {
   if (env.platform === 'web') {
     base.entry = './src/client.tsx';
     base.output.filename = 'js/client.js';
+    base.resolve.alias = {
+      // 'continuation-local-storage$': './src/helpers/emptyModule.js' // test
+      'cls-hooked$': path.resolve(__dirname, 'src/helpers/emptyModule.js')
+    };
+    console.log('__dirname = ', __dirname);
+    console.log('base.resolve.alias = ', base.resolve.alias);
   }
 
   return base;
