@@ -26,6 +26,7 @@
   "dependencies": {
     "@babel/runtime": "^7.9.2",
     "babel-plugin-fbt-runtime": "^0.9.4",
+    "cls-hooked": "^4.2.2",
     "fbt": "^0.10.2",
     "koa": "^2.11.0",
     "koa-bodyparser": "^4.3.0",
