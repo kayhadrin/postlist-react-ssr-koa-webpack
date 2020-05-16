@@ -61,11 +61,8 @@ module.exports = function(env, argv) {
     base.entry = './src/client.tsx';
     base.output.filename = 'js/client.js';
     base.resolve.alias = {
-      // 'continuation-local-storage$': './src/helpers/emptyModule.js' // test
       'cls-hooked$': path.resolve(__dirname, 'src/helpers/emptyModule.js')
     };
-    console.log('__dirname = ', __dirname);
-    console.log('base.resolve.alias = ', base.resolve.alias);
   }
 
   return base;
